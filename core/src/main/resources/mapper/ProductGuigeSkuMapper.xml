@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zhancheng.core.dao.ProductGuigeSkuMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.zhancheng.core.entity.ProductGuigeSku" id="productGuigeSkuMap">
+        <result property="skuId" column="sku_id"/>
+        <result property="pid" column="pid"/>
+        <result property="sp1" column="sp1"/>
+        <result property="sp2" column="sp2"/>
+        <result property="productNumber" column="product_number"/>
+        <result property="price" column="price"/>
+        <result property="weight" column="weight"/>
+        <result property="pic" column="pic"/>
+        <result property="totalStock" column="total_stock"/>
+        <result property="availableStock" column="available_stock"/>
+        <result property="lockStock" column="lock_stock"/>
+        <result property="excessStock" column="excess_stock"/>
+        <result property="cloudStock" column="cloud_stock"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+    sku_id,pid,sp1,sp2,product_number,price,weight,pic,total_stock,available_stock,lock_stock,excess_stock,cloud_stock    </sql>
+
+    <sql id="sort">
+        ORDER BY
+        <choose>
+            <when test='query.sortType != null'>
+                <if test='query.sortType == "1"'>
+                    zpgs.total_stock ASC
+                </if>
+                <if test='query.sortType == "2"'>
+                    zpgs.total_stock DESC
+                </if>
+                <if test='query.sortType == "3"'>
+                    zpgs.available_stock ASC
+                </if>
+                <if test='query.sortType == "4"'>
+                    zpgs.available_stock DESC
+                </if>
+                <if test='query.sortType == "5"'>
+                    zpgs.lock_stock DESC
+                </if>
+                <if test='query.sortType == "6"'>
+                    zpgs.lock_stock DESC
+                </if>
+                <if test='query.sortType == "7"'>
+                    zpgs.excess_stock DESC
+                </if>
+                <if test='query.sortType == "8"'>
+                    zpgs.excess_stock DESC
+                </if>
+            </when>
+            <otherwise>
+                zpgs.sku_id DESC
+            </otherwise>
+        </choose>
+    </sql>
+    <select id="queryList" resultType="com.zhancheng.core.vo.ProductSkuListVo">
+        SELECT
+               sku_id,
+               pid,
+               sp1,
+               sp2,
+               product_number,
+               price,
+               weight,
+               pic
+            FROM zc_product_guige_sku
+            WHERE pid = #{pid}
+    </select>
+    <select id="queryPage" resultType="com.zhancheng.core.vo.ProductSkuListVo">
+        SELECT
+            sku_id,
+            sp1,
+            sp2,
+            product_number,
+            price,weight,
+            pic
+        FROM zc_product_guige_sku
+            WHERE pid = #{pid}
+
+    </select>
+    <select id="queryStock" resultType="com.zhancheng.core.vo.SkuStockVo">
+        SELECT
+        zpgs.sku_id,
+        zpgs.pid,
+        zpgs.sp1,
+        zpgs.sp2,
+        zpgs.pic,
+        zpgs.total_stock,
+        zpgs.available_stock,
+        zpgs.lock_stock,
+        zpgs.excess_stock
+        FROM zc_product_guige_sku zpgs
+        <where>
+            zpgs.pid = #{query.pid}
+            <if test="query.sp1 != null">
+                AND zpgs.sp1 IN
+                <foreach item="sku1" collection="query.sp1.split(',')" open="(" separator="," close=")">
+                    #{sku1}
+                </foreach>
+            </if>
+            <if test="query.sp2 != null">
+                AND zpgs.sp2 IN
+                <foreach item="sku2" collection="query.sp2.split(',')" open="(" separator="," close=")">
+                    #{sku2}
+                </foreach>
+            </if>
+        </where>
+        <include refid="sort"/>
+    </select>
+    <select id="countStock" resultType="com.zhancheng.core.vo.StockCountVo">
+        SELECT
+            SUM(total_stock) totalStock,
+            SUM(available_stock) availableStock,
+            SUM(lock_stock) lockStock,
+            SUM(excess_stock) excessStock,
+            SUM(cloud_stock) cloudStock
+        FROM
+            zc_product_guige_sku zpgs
+        WHERE
+            zpgs.pid = #{pid}
+    </select>
+
+</mapper>

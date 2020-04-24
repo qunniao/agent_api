@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zhancheng.core.dao.MenuMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.zhancheng.core.entity.Menu" id="menuMap">
+        <result property="mid" column="mid"/>
+        <result property="fid" column="fid"/>
+        <result property="name" column="name"/>
+        <result property="icon" column="icon"/>
+        <result property="url" column="url"/>
+        <result property="sort" column="sort"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+    mid,fid,name,icon,url,sort   </sql>
+
+    <select id="queryInfo" resultMap="menuMap">
+        SELECT * FROM zc_menu WHERE mid = #{mid}
+    </select>
+
+
+</mapper>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zhancheng.core.dao.AgentRegisterReviewMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.zhancheng.core.entity.AgentRegisterReview" id="agentRegisterReviewMap">
+        <result property="id" column="id"/>
+        <result property="agentId" column="agent_id"/>
+        <result property="type" column="type"/>
+        <result property="inviter" column="inviter"/>
+        <result property="applyInfo" column="apply_info"/>
+        <result property="orderId" column="order_id"/>
+        <result property="payeeAccount" column="payee_account"/>
+        <result property="paymentAmount" column="payment_amount"/>
+        <result property="paymentVoucher" column="payment_voucher"/>
+        <result property="paymentAccount" column="payment_account"/>
+        <result property="refuseReason" column="refuse_reason"/>
+        <result property="status" column="status"/>
+        <result property="gmtCreate" column="gmt_create"/>
+        <result property="gmtModified" column="gmt_modified"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+    id,agent_id,type,inviter,apply_info,order_id,payee_account,payment_amount,payment_voucher,payment_account,refuse_reason,status,gmt_create,gmt_modified  </sql>
+
+    <select id="queryPage" resultType="com.zhancheng.core.vo.AgentReviewListVo">
+        SELECT
+            za.nickname,
+            za.phone,
+            inviter_agent.nickname inviterNick,
+            inviter_agent.phone inviterPhone,
+            zal.nick inviterLevelNick,
+            zal.`level` inviterLevel,
+            zoi.total_price,
+            zoi.order_state,
+            zarr.*
+        FROM
+            zc_agent_register_review zarr
+                LEFT JOIN zc_agent za
+                          ON zarr.agent_id = za.id
+                LEFT JOIN zc_agent inviter_agent
+                          ON zarr.inviter = inviter_agent.id
+                LEFT JOIN zc_agent_level zal
+                          ON inviter_agent.level_id = zal.id
+                LEFT JOIN zc_order_info zoi
+                          ON zarr.order_id = zoi.oid
+        <where>
+            <if test="query.status != null">
+                AND zarr.status = #{query.status}
+            </if>
+            <if test="query.inviter != null">
+                AND zarr.inviter = #{query.inviter}
+            </if>
+        </where>
+        ORDER BY zarr.gmt_create DESC
+    </select>
+
+</mapper>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zhancheng.core.dao.AgentLevelMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.zhancheng.core.entity.AgentLevel" id="agentLevelMap">
+        <result property="id" column="id"/>
+        <result property="level" column="level"/>
+        <result property="nick" column="nick"/>
+        <result property="isDarkLevel" column="is_dark_level"/>
+        <result property="stockDiscount" column="stock_discount"/>
+        <result property="minStock" column="min_stock"/>
+        <result property="timeLimit" column="time_limit"/>
+        <result property="registPrompt" column="regist_prompt"/>
+        <result property="isTask" column="is_task"/>
+        <result property="stockType" column="stock_type"/>
+        <result property="taskAmount" column="task_amount"/>
+        <result property="firstDiscount" column="first_discount"/>
+        <result property="gids" column="gids"/>
+        <result property="gmtCreate" column="gmt_create"/>
+        <result property="gmtModified" column="gmt_modified"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+    id,level,nick,is_dark_level,stock_discount,min_stock,time_limit,regist_prompt,is_task,stock_type,task_amount,first_discount,gids,gmt_create,gmt_modified,    </sql>
+    <select id="queryList" resultType="com.zhancheng.core.vo.AgentLevelListVo">
+        SELECT
+            zal.id,
+            zal.LEVEL,
+            zal.nick,
+            zal.stock_discount,
+            zal.stock_type,
+            zal.is_task,
+            COUNT( za.id ) headcount,
+            COUNT( IF ( reviewed = '0', TRUE, NULL ) ) already_agent,
+            COUNT( IF ( reviewed = '1', TRUE, NULL ) ) applying
+        FROM
+            zc_agent_level zal
+                LEFT JOIN zc_agent za ON za.level_id = zal.id
+        WHERE zal.is_dark_level = 0
+        GROUP BY
+            zal.id
+    </select>
+
+</mapper>

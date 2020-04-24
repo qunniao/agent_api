@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zhancheng.core.dao.RewardMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.zhancheng.core.entity.Reward" id="rewardMap">
+        <result property="id" column="id"/>
+        <result property="agentId" column="agent_id"/>
+        <result property="rewardType" column="reward_type"/>
+        <result property="rewardSource" column="reward_source"/>
+        <result property="rewardPeople" column="reward_people"/>
+        <result property="amount" column="amount"/>
+        <result property="orderNumber" column="order_number"/>
+        <result property="amountType" column="amount_type"/>
+        <result property="sceneType" column="scene_type"/>
+        <result property="explain" column="explain"/>
+        <result property="rewardState" column="reward_state"/>
+        <result property="gmtCreate" column="gmt_create"/>
+        <result property="gmtModified" column="gmt_modified"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+    id,agent_id,reward_type,reward_source,reward_people,amount,order_number,amount_type,scene_type,explain,reward_state,gmt_create,gmt_modified  </sql>
+
+    <select id="queryPage" resultType="com.zhancheng.core.vo.RewardVo">
+        SELECT
+            za.nickname,
+            za.phone agentPhone,
+            inviter.nickname rewardSourceNick,
+            inviter.phone rewardSourcePhone,
+            zr.id,
+            zr.agent_id,
+            zr.reward_type,
+            zr.reward_source,
+            zr.reward_people,
+            zr.amount,
+            zr.order_number,
+            zr.amount_type,
+            zr.scene_type,
+            zr.`explain`,
+            zr.reward_state,
+            zr.gmt_create,
+            zr.gmt_modified
+        FROM
+            zc_reward AS zr
+                LEFT JOIN zc_agent za
+                          ON za.id = zr.agent_id
+                LEFT JOIN zc_agent inviter
+                          ON zr.reward_source = inviter.id
+            <where>
+                <if test="query.orderNumber">
+                    AND zr.order_number = #{query.orderNumber}
+                </if>
+                <if test="query.rewardState">
+                     AND zr.reward_state = #{query.rewardState}
+                </if>
+
+                <if test="query.agentId">
+                     AND zr.agent_id = #{query.agentId}
+                </if>
+            </where>
+        ORDER BY zr.gmt_create DESC
+    </select>
+
+
+</mapper>

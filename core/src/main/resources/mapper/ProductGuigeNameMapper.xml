@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zhancheng.core.dao.ProductGuigeNameMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.zhancheng.core.entity.ProductGuigeName" id="productGuigeNameMap">
+        <result property="nid" column="nid"/>
+        <result property="pid" column="pid"/>
+        <result property="gName" column="g_name"/>
+        <result property="level" column="level"/>
+        <collection property="productGuigeValues" column="nid" select="com.zhancheng.core.dao.ProductGuigeValueMapper.getList"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List"> nid,pid,g_name,level   </sql>
+
+    <select id="queryList" resultMap="productGuigeNameMap">
+        SELECT
+            *
+        FROM
+            zc_product_guige_name zpgn
+        WHERE pid = #{pid}
+    </select>
+
+    <select id="queryListByNid" resultMap="productGuigeNameMap">
+        SELECT
+        *
+        FROM
+        zc_product_guige_name zpgn
+        WHERE nid = #{nid}
+    </select>
+
+</mapper>

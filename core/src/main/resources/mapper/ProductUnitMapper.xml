@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zhancheng.core.dao.ProductUnitMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.zhancheng.core.entity.ProductUnit" id="productUnitMap">
+        <result property="uid" column="uid"/>
+        <result property="productId" column="product_id"/>
+        <result property="unitName" column="unit_name"/>
+        <result property="level" column="level"/>
+        <result property="num" column="num"/>
+        <result property="gmtCreate" column="gmt_create"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+    uid,product_id,unit_name,level,num,gmt_create   </sql>
+
+
+</mapper>

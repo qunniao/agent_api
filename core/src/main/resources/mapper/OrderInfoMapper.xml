@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zhancheng.core.dao.OrderInfoMapper">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.zhancheng.core.entity.OrderInfo" id="orderInfoMap">
+        <result property="oid" column="oid"/>
+        <result property="type" column="type"/>
+        <result property="orderType" column="order_type"/>
+        <result property="uid" column="uid"/>
+        <result property="agentId" column="agent_id"/>
+        <result property="storePersonId" column="store_person_id"/>
+        <result property="orderNumber" column="order_number"/>
+        <result property="contactName" column="contact_name"/>
+        <result property="contactPhone" column="contact_phone"/>
+        <result property="contactAddress" column="contact_address"/>
+        <result property="payPlatform" column="pay_platform"/>
+        <result property="payNumber" column="pay_number"/>
+        <result property="sendWay" column="send_way"/>
+        <result property="payWay" column="pay_way"/>
+        <result property="totalPrice" column="total_price"/>
+        <result property="payMoney" column="pay_money"/>
+        <result property="payTime" column="pay_time"/>
+        <result property="freight" column="freight"/>
+        <result property="discount" column="discount"/>
+        <result property="isCloud" column="is_cloud"/>
+        <result property="isOpen" column="is_open"/>
+        <result property="isFirst" column="is_first"/>
+        <result property="isForward" column="is_forward"/>
+        <result property="isCloudForward" column="is_cloud_forward"/>
+        <result property="orderState" column="order_state"/>
+        <result property="remark" column="remark"/>
+        <result property="isDeleted" column="is_deleted"/>
+        <result property="gmtCreate" column="gmt_create"/>
+        <result property="gmtModified" column="gmt_modified"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+            oid,
+            type,
+            order_type,
+            uid,
+            agent_id,
+            store_person_id,
+            remark,
+            order_number,
+            contact_name,
+            contact_phone,
+            contact_address,
+            pay_platform,
+            pay_number,
+            send_way,
+            pay_way,
+            total_price,
+            pay_money,
+            pay_time,
+            freight,
+            discount,
+            is_cloud,
+            is_opne,
+            is_first,
+            is_forward,
+            is_cloud_forward,
+            order_state,
+            is_deleted,
+            gmt_create,
+            gmt_modified,    </sql>
+    <select id="queryPage" resultMap="orderInfoMap">
+        SELECT
+        zoi.oid,
+        zoi.type,
+        zoi.order_type,
+        zoi.order_number,
+        zoi.uid,
+        zoi.agent_id,
+        zoi.total_price,
+        zoi.is_cloud,
+        zoi.order_state
+        FROM
+        zc_order_info AS zoi
+        LEFT JOIN zc_order_product zop
+        ON zop.order_number = zoi.order_number AND zop.is_deleted = 0
+        <where>
+            zoi.is_deleted = 0 AND zoi.order_state != -1
+            <if test="query.search!= null">
+                AND (zoi.order_number LIKE CONCAT('%', #{query.search},'%')
+                OR zoi.contact_name LIKE CONCAT('%', #{query.search},'%')
+                OR zoi.contact_phone LIKE CONCAT('%', #{query.search},'%')
+                OR zop.product_name LIKE CONCAT('%', #{query.search},'%'))
+            </if>
+            <if test="query.orderState != null">
+                AND zoi.order_state = #{query.orderState}
+            </if>
+            <if test="query.orderType != null">
+                AND zoi.order_type = #{query. }
+            </if>
+            <if test="query.uid != null">
+                AND zoi.uid = #{query.uid}
+            </if>
+            <if test="query.agentId != null">
+                AND zoi.agent_id = #{query.agentId}
+            </if>
+        </where>
+        GROUP BY zoi.oid
+        ORDER BY zoi.gmt_create DESC
+    </select>
+    <select id="queryInfo" resultType="com.zhancheng.core.vo.RetailOrderInfoVo">
+        SELECT
+        zoi.oid,
+        zoi.order_number,
+        zoi.contact_name,
+        zoi.contact_phone,
+        zoi.contact_address,
+        zoi.total_price,
+        zoi.freight,
+        zoi.gmt_create,
+        zoi.order_state,
+        za.nickname,
+        za.cover,
+        za.phone
+        FROM
+        zc_order_info AS zoi
+        LEFT JOIN zc_agent za
+        ON za.id = zoi.agent_id
+        WHERE
+        zoi.is_deleted = 0 AND zoi.oid = #{oid}
+    </select>
+    <select id="queryDetails" resultType="com.zhancheng.core.vo.OrderInfoVo">
+        SELECT
+        zal.nick user_agent_level,
+        zs.store_cover,
+        zs.store_name,
+        zoi.*
+        FROM
+        zc_order_info zoi
+        LEFT JOIN zc_user zu ON zu.uid = zoi.uid
+        AND zu.is_deleted = 0
+        LEFT JOIN zc_agent za ON za.openid = zu.openid
+        LEFT JOIN zc_agent_level zal ON za.level_id = zal.id
+        LEFT JOIN zc_store zs ON zoi.agent_id = zs.agent_id
+        <where>
+            zoi.is_deleted = 0
+            <if test="oid != null">
+                AND zoi.oid = #{oid}
+            </if>
+            <if test="orderNumber != null and orderNumber != ''">
+                AND zoi.order_number = #{orderNumber}
+            </if>
+        </where>
+
+    </select>
+
+    <select id="queryBackPage" resultType="com.zhancheng.core.vo.OrderBackListVo">
+        SELECT
+        zal.nick,
+        zu.nickname,
+        zu.phone,
+        zoi.oid,
+        zoi.contact_name,
+        zoi.type,
+        zoi.discount,
+        zoi.order_type,
+        zoi.order_number,
+        zoi.total_price,
+        zoi.pay_money,
+        zoi.pay_way,
+        zoi.freight,
+        zoi.gmt_create,
+        zoi.pay_time,
+        zoi.order_state,
+        zoi.is_cloud,
+        zoi.is_deleted deleted
+        FROM
+        zc_order_info zoi
+        LEFT JOIN zc_user zu
+        ON zu.uid = zoi.uid
+        LEFT JOIN zc_agent za
+        ON zu.openid = za.openid
+        LEFT JOIN zc_agent_level zal
+        ON za.level_id = zal.id
+        <where>
+            <choose>
+                <when test='query.orderState == "1"'>
+                    AND zoi.order_state = 2
+                </when>
+                <when test='query.orderState == "2"'>
+                    AND zoi.order_state = 3
+                </when>
+                <when test='query.orderState == "3"'>
+                    AND zoi.order_state = 4
+                </when>
+                <when test='query.orderState == "4"'>
+                    AND zoi.order_state = 5
+                </when>
+                <when test='query.orderState == "5"'>
+                    AND zoi.order_state = 7
+                </when>
+                <when test='query.orderState == "6"'>
+                    AND zoi.order_state = 0
+                </when>
+            </choose>
+            <choose>
+                <when test='query.orderState == "7"'>
+                    AND zoi.is_deleted = 1
+                </when>
+                <otherwise>
+                    AND zoi.is_deleted = 0
+                </otherwise>
+            </choose>
+        </where>
+        ORDER BY
+        <choose>
+            <when test='query.sortType == "1"'>
+                zoi.pay_time DESC
+            </when>
+            <otherwise>
+                zoi.gmt_create DESC
+            </otherwise>
+        </choose>
+
+    </select>
+
+</mapper>

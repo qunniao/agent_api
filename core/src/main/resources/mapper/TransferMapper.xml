@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zhancheng.core.dao.TransferMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.zhancheng.core.entity.Transfer" id="transferMap">
+        <result property="id" column="id"/>
+        <result property="agentId" column="agent_id"/>
+        <result property="payeeId" column="payee_id"/>
+        <result property="phone" column="phone"/>
+        <result property="trueName" column="true_name"/>
+        <result property="amount" column="amount"/>
+        <result property="description" column="description"/>
+        <result property="gmtCreate" column="gmt_create"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+    id,agent_id,payee_id,phone,true_name,amount,description,gmt_create    </sql>
+
+    <select id="queryPage" resultType="com.zhancheng.core.vo.TransferListVo">
+        SELECT
+        zt.id,
+        zt.agent_id,
+        zt.payee_id,
+        zt.phone,
+        zt.true_name,
+        zt.amount,
+        zt.gmt_create,
+        za.true_name agentName,
+        za.phone agentPhone,
+        za.nickname agentNick
+        FROM zc_transfer zt
+        LEFT JOIN zc_agent za
+        ON zt.agent_id = za.id
+        <where>
+            <if test="query.phone != null">
+                AND zt.phone LIKE CONCAT('%',#{query.phone},'%')
+            </if>
+            <if test="query.trueName != null">
+                AND zt.true_name LIKE CONCAT('%',#{query.trueName},'%')
+            </if>
+            <if test="query.agentId != null">
+                AND zt.agent_id = #{query.agentId}
+            </if>
+        </where>
+        ORDER BY zt.gmt_create DESC
+    </select>
+
+</mapper>

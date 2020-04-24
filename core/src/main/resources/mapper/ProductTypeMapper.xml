@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zhancheng.core.dao.ProductTypeMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.zhancheng.core.entity.ProductType" id="productTypeMap">
+        <result property="tid" column="tid"/>
+        <result property="pid" column="pid"/>
+        <result property="pgId" column="pg_id"/>
+        <result property="typeName" column="type_name"/>
+        <result property="cover" column="cover"/>
+        <result property="sort" column="sort"/>
+        <result property="isDeleted" column="is_deleted"/>
+        <result property="isHidden" column="is_hidden"/>
+        <result property="gmtCreate" column="gmt_create"/>
+        <result property="gmtModified" column="gmt_modified"/>
+        <collection property="productTypeList" select="queryList" column="tid"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+    tid,pid,pg_id,type_name,cover,sort,is_deleted,is_hidden,gmt_create,gmt_modified </sql>
+    <select id="queryTypePage" resultMap="productTypeMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM zc_product_type zpt
+        WHERE zpt.pid = 0 AND zpt.is_deleted = 0
+        ORDER BY
+        <choose>
+            <when test='sortType == "1"'>
+                zpt.gmt_create ASC
+            </when>
+            <when test='sortType == "2"'>
+                zpt.gmt_create DESC
+            </when>
+            <otherwise>
+                zpt.sort DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="queryList" resultType="ProductType">
+        SELECT <include refid="Base_Column_List"/>
+        FROM zc_product_type zpt
+        WHERE zpt.pid = #{tid} AND zpt.is_deleted = 0
+    </select>
+    <select id="selectListByPid" resultType="com.zhancheng.core.vo.ProductTypeVo">
+        SELECT distinct zpt.tid, zpt.type_name
+            FROM zc_product_type zpt
+            INNER JOIN zc_pt zcpt
+            ON zcpt.type_id = zpt.tid
+        WHERE zcpt.product_id = #{pid} AND zpt.is_deleted = 0
+    </select>
+
+    <select id="queryTypeByList" resultMap="productTypeMap">
+        SELECT zpt.tid, zpt.type_name
+        FROM zc_product_type zpt
+        WHERE zpt.pid = 0 AND zpt.is_deleted = 0
+        ORDER BY zpt.sort DESC
+    </select>
+    <select id="queryType" resultType="java.util.Map">
+        SELECT
+            zp.pid,
+            zp.product_name,
+            zp.cover,
+            zp.available_stock,
+            GROUP_CONCAT(DISTINCT zpt.type_name ORDER BY zpt.tid ASC) typeName
+        FROM
+            zc_product zp
+                LEFT JOIN zc_pt zcpt ON zp.pid = zcpt.product_id
+                LEFT JOIN zc_product_type zpt ON zpt.tid = zcpt.type_id
+                AND zpt.is_deleted = 0
+        WHERE zp.pid = #{pid} AND zpt.is_deleted = 0
+        GROUP BY zp.pid
+    </select>
+    <select id="countSubordinate" resultType="java.lang.Integer">
+        SELECT COUNT(tid) FROM zc_product_type zpt WHERE zpt.is_deleted = 0 AND pid = #{tid}
+    </select>
+
+    <select id="countTypeList" resultType="java.util.Map">
+        SELECT
+            zpt.tid,
+            zpt.type_name,
+            zpt.cover,
+            COUNT(DISTINCT zcpt.product_id, zcpt.product_id) count
+        FROM
+            zc_product_type zpt
+                LEFT JOIN zc_pt zcpt
+                          ON zcpt.type_id = zpt.tid
+            WHERE zpt.is_deleted = 0
+        GROUP BY zpt.tid
+    </select>
+
+</mapper>

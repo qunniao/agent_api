@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zhancheng.core.dao.StoreVisitorMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.zhancheng.core.entity.StoreVisitor" id="storeVisitorMap">
+        <result property="id" column="id"/>
+        <result property="uid" column="uid"/>
+        <result property="storeId" column="store_id"/>
+        <result property="managerId" column="manager_id"/>
+        <result property="ip" column="ip"/>
+        <result property="region" column="region"/>
+        <result property="num" column="num"/>
+        <result property="isDeleted" column="is_deleted"/>
+        <result property="gmtCreate" column="gmt_create"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+    id,uid,store_id,manager_id,ip,region,num,is_deleted,gmt_create   </sql>
+
+    <select id="queryPage" resultType="com.zhancheng.core.vo.StoreVisitorVo">
+        SELECT
+            zsv.*,
+            zu.cover,
+            zu.nickname,
+            zs.store_name,
+            za.nickname,
+            za.phone
+        FROM
+            zc_store_visitor zsv
+                LEFT JOIN zc_user zu
+                          ON zsv.uid = zu.uid  AND zu.is_deleted = 0
+                LEFT JOIN zc_store zs
+                          ON zs.sid = zsv.store_id  AND zs.is_deleted = 0
+                LEFT JOIN zc_agent za
+                          ON za.id = zs.agent_id
+       <where>
+           zsv.is_deleted = 0
+            <if test="query.name != null">
+                AND zu.nickname LIKE CONCAT('%', #{query.name},'%')
+            </if>
+            <if test="query.startTime != null and query.endTime != null">
+                AND zsv.gmt_create BETWEEN #{query.startTime} AND #{query.endTime}
+            </if>
+       </where>
+    </select>
+
+</mapper>

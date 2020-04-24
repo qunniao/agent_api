@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zhancheng.core.dao.StoreAdMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.zhancheng.core.entity.StoreAd" id="storeAdMap">
+        <result property="id" column="id"/>
+        <result property="type" column="type"/>
+        <result property="productId" column="product_id"/>
+        <result property="cover" column="cover"/>
+        <result property="gmtCreate" column="gmt_create"/>
+        <result property="gmtModified" column="gmt_modified"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+    id,type,product_id,cover,gmt_create,gmt_modified   </sql>
+
+    <select id="queryInfo" resultType="com.zhancheng.core.vo.StoreAdVo">
+        SELECT
+            zp.price,
+            zp.product_name,
+            zp.cover productCover,
+            zsa.*
+        FROM
+            zc_store_ad zsa
+                LEFT JOIN zc_product zp ON zp.pid = zsa.product_id
+        WHERE zsa.type = #{type}
+    </select>
+
+
+</mapper>

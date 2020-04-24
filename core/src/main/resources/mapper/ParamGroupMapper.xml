@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zhancheng.core.dao.ParamGroupMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.zhancheng.core.entity.ParamGroup" id="paramGroupMap">
+        <result property="pgid" column="pgid"/>
+        <result property="title" column="title"/>
+        <result property="names" column="names"/>
+        <result property="gmtCreate" column="gmt_create"/>
+        <result property="gmtModified" column="gmt_modified"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+    pgid,title,names, gmt_create,gmt_modified   </sql>
+
+    <select id="queryList" resultType="java.util.Map">
+        SELECT pgid, title, names FROM zc_param_group zpg
+    </select>
+
+    <select id="queryPage" resultType="com.zhancheng.core.vo.ParamGroupListVo">
+        SELECT
+        pgid pgId,
+        title,
+        names,
+        zpg.gmt_create,
+        GROUP_CONCAT( zpt.type_name) typeNames
+        FROM zc_param_group zpg
+        LEFT JOIN zc_product_type zpt ON zpt.pg_id = zpg.pgid AND zpt.is_deleted = 0
+        <where>
+            <if test="keyWord != null">
+                zpg.title LIKE CONCAT('%',#{keyWord} ,'%')
+            </if>
+        </where>
+        GROUP BY zpg.pgid
+        <if test='sortType == "1"'>
+            ORDER BY zpg.gmt_create ASC
+        </if>
+        <if test='sortType == "2"'>
+            ORDER BY zpg.gmt_create DESC
+        </if>
+    </select>
+</mapper>

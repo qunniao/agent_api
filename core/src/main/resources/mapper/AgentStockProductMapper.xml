@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zhancheng.core.dao.AgentStockProductMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.zhancheng.core.entity.AgentStockProduct" id="agentStockProductMap">
+        <result property="id" column="id"/>
+        <result property="agentId" column="agent_id"/>
+        <result property="storeId" column="store_id"/>
+        <result property="type" column="type"/>
+        <result property="productId" column="product_id"/>
+        <result property="skuId" column="sku_id"/>
+        <result property="importPrice" column="import_price"/>
+        <result property="stock" column="stock"/>
+        <result property="gmtCreate" column="gmt_create"/>
+        <result property="gmtModified" column="gmt_modified"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+    id,agent_id,store_id,type,product_id,import_price,stock,gmt_create,gmt_modified   </sql>
+
+    <select id="queryAppletPage" resultType="com.zhancheng.core.vo.AgentStockProductVo">
+        SELECT
+            zasp.id,
+            zasp.agent_id,
+            zasp.stock,
+            zp.product_name,
+            IFNULL(zpgs.pic,zp.cover) cover,
+            zpgs.sp1,
+            zpgs.sp2
+        FROM
+            zc_agent_stock_product zasp
+                LEFT JOIN zc_product zp ON zasp.product_id = zp.pid
+                LEFT JOIN zc_product_guige_sku zpgs ON zasp.sku_id = zpgs.sku_id
+        <where>
+                zasp.agent_id = #{query.agentId}
+            <if test="query.productName != null">
+                AND zp.product_name LIKE CONCAT('%', #{query.productName},'%')
+            </if>
+            <if test="query.type != null">
+                AND zasp.type = #{query.type}
+            </if>
+        </where>
+    </select>
+
+</mapper>

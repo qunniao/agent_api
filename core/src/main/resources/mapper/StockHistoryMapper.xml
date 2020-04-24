@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zhancheng.core.dao.StockHistoryMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.zhancheng.core.entity.StockHistory" id="stockHistoryMap">
+        <result property="id" column="id"/>
+        <result property="pid" column="pid"/>
+        <result property="skuId" column="sku_id"/>
+        <result property="userType" column="user_type"/>
+        <result property="operatorId" column="operator_id"/>
+        <result property="agentId" column="agent_id"/>
+        <result property="agentName" column="agent_name"/>
+        <result property="agentPhone" column="agent_phone"/>
+        <result property="agentLevel" column="agent_level"/>
+        <result property="type" column="type"/>
+        <result property="changeType" column="change_type"/>
+        <result property="num" column="num"/>
+        <result property="stock" column="stock"/>
+        <result property="orderId" column="order_id"/>
+        <result property="stockType" column="stock_type"/>
+        <result property="orderType" column="order_type"/>
+        <result property="intro" column="intro"/>
+        <result property="gmtCreate" column="gmt_create"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id,pid,sku_id, user_type,operator_id,agent_id,agent_name,agent_phone,agent_level,type,change_type,num,stock,
+        order_id,stock_type,order_type,intro,gmt_create
+    </sql>
+    <sql id="queryTerm">
+    <where>
+        <if test="query.search != null">
+        AND zp.product_name LIKE CONCAT('%', #{query.search}, '%')
+        </if>
+        <if test="query.userType != null">
+        AND zsh.user_type = #{query.userType}
+        </if>
+        <if test="query.changeType != null">
+        AND zsh.change_type = #{query.changeType}
+        </if>
+        <if test="query.startTime != null and query.endTime != null">
+        AND zsh.gmt_create BETWEEN #{query.startTime} AND #{query.endTime}
+        </if>
+        <if test="query.orderType != null">
+        AND zsh.order_type = #{query.orderType}
+        </if>
+        <if test="query.agentLevel != null">
+        AND zsh.agent_level = #{query.agentLevel}
+        </if>
+        <if test="query.stockType != null">
+        AND zsh.stock_type = #{query.stockType}
+        </if>
+        <if test="query.agentInfo != null">
+        AND zsh.agent_name LIKE CONCAT('%', #{query.agentInfo}, '%')
+         OR zsh.agent_phone LIKE CONCAT('%', #{query.agentInfo}, '%')
+        </if>
+    </where>
+    </sql>
+
+    <select id="queryPage" resultType="com.zhancheng.core.vo.StockHistoryVo">
+        SELECT
+            zsh.*,
+            zp.product_name,
+            zp.cover,
+            zpgs.pic,
+            zpgs.sp1,
+            zpgs.sp2
+        FROM
+            zc_stock_history zsh
+                INNER JOIN zc_product zp
+                           ON zp.pid = zsh.pid
+                LEFT JOIN zc_product_guige_sku zpgs
+                          ON zsh.sku_id = zpgs.sku_id
+        <include refid="queryTerm"/>
+        ORDER BY zsh.gmt_create DESC
+    </select>
+
+
+</mapper>

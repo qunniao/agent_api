@@ -1,0 +1,388 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--suppress ALL -->
+<mapper namespace="com.zhancheng.core.dao.ProductMapper">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.zhancheng.core.entity.Product" id="productMap">
+        <result property="pid" column="pid"/>
+        <result property="productType" column="product_type"/>
+        <result property="productNumber" column="product_number"/>
+        <result property="sid" column="sid"/>
+        <result property="productName" column="product_name"/>
+        <result property="cover" column="cover"/>
+        <result property="productIntro" column="product_intro"/>
+        <result property="price" column="price"/>
+        <result property="marketPrice" column="market_price"/>
+        <result property="stockPrice" column="stock_price"/>
+        <result property="weight" column="weight"/>
+        <result property="isRecommend" column="is_recommend"/>
+        <result property="totalStock" column="total_stock"/>
+        <result property="availableStock" column="available_stock"/>
+        <result property="lockStock" column="lock_stock"/>
+        <result property="excessStock" column="excess_stock"/>
+        <result property="cloudStock" column="cloud_stock"/>
+        <result property="showStock" column="show_stock"/>
+        <result property="content" column="content"/>
+        <result property="retailFreightId" column="retail_freight_id"/>
+        <result property="agentFreightId" column="agent_freight_id"/>
+        <result property="cloudFreightId" column="cloud_freight_id"/>
+        <result property="isUniformFreight" column="is_uniform_freight"/>
+        <result property="sales" column="sales"/>
+        <result property="realSales" column="real_sales"/>
+        <result property="flowSales" column="flow_sales"/>
+        <result property="agentBuy" column="agent_buy"/>
+        <result property="inviteReward" column="invite_reward"/>
+        <result property="sort" column="sort"/>
+        <result property="putawayTime" column="putaway_time"/>
+        <result property="soldoutTime" column="soldout_time"/>
+        <result property="status" column="status"/>
+        <result property="isSku" column="is_sku"/>
+        <result property="isDeleted" column="is_deleted"/>
+        <result property="gmtCreate" column="gmt_create"/>
+        <result property="gmtModified" column="gmt_modified"/>
+        <collection property="productTypeList" fetchType="lazy" ofType="com.zhancheng.core.vo.ProductTypeVo"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+            pid,
+            product_type,
+            product_number,
+            sid,
+            product_name,
+            cover,
+            product_intro,
+            price,
+            market_price,
+            weight,
+            is_recommend,
+            total_stock,
+            available_stock,
+            lock_stock,
+            excess_stock,
+            cloud_stock,
+            show_stock,
+            content,
+            retail_freight_id,
+            agent_freight_id,
+            cloud_freight_id,
+            sales,
+            real_sales,
+            flow_sales,
+            agent_buy,
+            sort,
+            putaway_time,
+            is_sku,
+            soldout_time,
+            status,
+            stock_price,
+            invite_reward,
+            is_deleted,
+            gmt_create,
+            gmt_modified
+    </sql>
+    <sql id="table">
+        FROM zc_product AS zp
+                 LEFT JOIN zc_product_guige_sku zcgs
+                           ON zcgs.pid = zp.pid
+                 LEFT JOIN zc_pt zcpt
+                           ON zp.pid = zcpt.product_id
+                 LEFT JOIN zc_product_type zpt
+                           ON zpt.tid = zcpt.type_id
+    </sql>
+    <sql id="queryTerm">
+        <where>
+            zp.is_deleted = 0
+            <if test="query.productType != null">
+                AND zp.product_type = #{query.productType}
+            </if>
+            <if test="query.search != null">
+                AND (zp.product_name LIKE CONCAT('%', #{query.search}, '%') OR zp.product_number LIKE CONCAT('%',
+                #{query.search}, '%'))
+            </if>
+            <if test="query.startTime != null and query.endTime != null">
+                AND zp.gmt_create BETWEEN #{query.startTime} AND #{query.endTime}
+            </if>
+            <if test="query.productNumber != null">
+                AND zcgs.product_number LIKE CONCAT('%',#{query.productNumber}, '%')
+            </if>
+            <if test="query.typeId != null">
+                AND zcpt.type_id = #{query.typeId}
+            </if>
+            <if test="query.minStore != null">
+                AND <![CDATA[zp.total_stock >= #{query.minStore}]]>
+            </if>
+            <if test="query.maxStore != null">
+                AND <![CDATA[zp.total_stock < #{query.maxStore}]]>
+            </if>
+            <if test="query.minPrice != null">
+                AND <![CDATA[zp.price >= #{query.minPrice}]]>
+            </if>
+            <if test="query.maxPrice != null">
+                AND <![CDATA[zp.price < #{query.maxPrice}]]>
+            </if>
+            <if test="query.minSales != null">
+                AND <![CDATA[zp.real_sales >= #{query.minSales}]]>
+            </if>
+            <if test="query.maxSales != null">
+                AND <![CDATA[zp.real_sales < #{query.maxSales}]]>
+            </if>
+
+            <if test="query.freightId != null">
+                AND zp.retail_freight_id = #{query.freightId} OR zp.agent_freight_id = #{query.freightId}
+                OR zp.cloud_freight_id = #{query.freightId}
+            </if>
+            <choose>
+                <when test='query.statusType == "1"'>
+                    AND zp.status = 0
+                </when>
+                <when test='query.statusType == "2"'>
+                    AND zp.status = -1
+                </when>
+                <when test='query.statusType == "3"'>
+                    AND zp.available_stock = 0
+                </when>
+                <when test='query.statusType == "4"'>
+                    AND <![CDATA[zp.available_stock <= 10 ]]>
+                </when>
+            </choose>
+        </where>
+    </sql>
+
+    <select id="queryPage" resultType="com.zhancheng.core.vo.ProductListVo">
+        SELECT
+        zp.pid,
+        zp.product_number,
+        zp.product_type,
+        zp.product_name,
+        zp.cover,
+        zp.weight,
+        zp.price,
+        zp.invite_reward,
+        zp.market_price,
+        zp.stock_price,
+        zp.total_stock,
+        zp.available_stock,
+        zp.lock_stock,
+        zp.excess_stock,
+        zp.cloud_stock,
+        zp.retail_freight_id,
+        zp.agent_freight_id,
+        zp.cloud_freight_id,
+        zp.sales,
+        zp.is_sku,
+        zp.real_sales,
+        zp.flow_sales,
+        zp.sort,
+        zp.gmt_create,
+        zp.status,
+        GROUP_CONCAT(DISTINCT zpt.type_name ORDER BY zpt.tid ASC) typeName
+        <include refid="table"/>
+        <include refid="queryTerm"/>
+        GROUP BY zp.pid
+        ORDER BY
+        <choose>
+            <when test='query.sortType != null'>
+                <if test='query.sortType == "1"'>
+                    zp.price ASC
+                </if>
+                <if test='query.sortType == "2"'>
+                    zp.price DESC
+                </if>
+                <if test='query.sortType == "3"'>
+                    zp.real_sales ASC
+                </if>
+                <if test='query.sortType == "4"'>
+                    zp.real_sales DESC
+                </if>
+                <if test='query.sortType == "5"'>
+                    zp.gmt_create DESC
+                </if>
+                <if test='query.sortType == "6"'>
+                    zp.gmt_create DESC
+                </if>
+            </when>
+            <otherwise>
+                zp.sort DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="countProduct" resultType="com.zhancheng.core.vo.ProductCountVo">
+        SELECT
+        COUNT( DISTINCT zp.pid, IF ( zp.STATUS = 0, TRUE, NULL )) sellNum,
+        COUNT( DISTINCT zp.pid, IF ( zp.STATUS = - 1, TRUE, NULL )) soldOutNum,
+        COUNT( DISTINCT zp.pid, IF ( zp.available_stock = 0, TRUE, NULL)) sellOutNum,
+        COUNT( DISTINCT zp.pid, IF ( <![CDATA[zp.available_stock <= 10]]>, TRUE, NULL)) warningNum
+        <include refid="table"/>
+        <include refid="queryTerm"/>
+    </select>
+    <select id="queryInfo" resultType="com.zhancheng.core.vo.ProductVo">
+        SELECT zp.pid,
+        zp.product_number,
+        zp.product_name,
+        zp.cover,
+        zp.price,
+        zp.market_price,
+        zp.weight,
+        zp.show_stock,
+        zp.stock_price,
+        zp.invite_reward,
+        zp.available_stock,
+        zp.content,
+        zp.retail_freight_id,
+        zp.agent_freight_id,
+        zp.cloud_freight_id,
+        zp.is_uniform_freight,
+        zp.sort,
+        zp.sales,
+        zp.putaway_time,
+        zp.soldout_time,
+        zp.status,
+        zp.is_sku,
+        zp.agent_buy
+        FROM zc_product AS zp
+        WHERE zp.pid = #{pid}
+    </select>
+    <select id="queryStock" resultType="com.zhancheng.core.vo.StockListVo">
+        SELECT
+        zp.pid,
+        zp.cover,
+        zp.product_type,
+        zp.product_name,
+        zp.is_sku,
+        zp.total_stock,
+        zp.available_stock,
+        zp.lock_stock,
+        zp.excess_stock,
+        GROUP_CONCAT(DISTINCT zpt.type_name ORDER BY zpt.tid ASC) typeName
+        FROM
+        zc_product AS zp
+        LEFT JOIN zc_pt zcpt
+        ON zp.pid = zcpt.product_id
+        LEFT JOIN zc_product_type zpt
+        ON zpt.tid = zcpt.type_id AND zpt.is_deleted = 0
+        <where>
+            zp.is_deleted = 0
+            <if test="query.productType != null">
+                AND zp.product_type = #{query.productType}
+            </if>
+            <if test="query.search != null">
+                AND zp.product_name LIKE CONCAT('%', #{query.search}, '%') OR zp.product_number LIKE CONCAT('%',
+                #{query.search}, '%')
+            </if>
+            <if test="query.typeId != null">
+                AND zcpt.type_id = #{query.typeId}
+            </if>
+
+            # 状态查询
+            <choose>
+                <when test='query.statusType == "1"'>
+                    AND zp.status = 0
+                </when>
+                <when test='query.statusType == "2"'>
+                    AND zp.status = -1
+                </when>
+                <when test='query.statusType == "3"'>
+                    AND <![CDATA[zp.available_stock <= 10 ]]>
+                </when>
+            </choose>
+        </where>
+        GROUP BY zp.pid
+        ORDER BY
+        <choose>
+            <when test='query.sortType != null'>
+                <if test='query.sortType == "1"'>
+                    zp.total_stock ASC
+                </if>
+                <if test='query.sortType == "2"'>
+                    zp.total_stock DESC
+                </if>
+                <if test='query.sortType == "3"'>
+                    zp.available_stock ASC
+                </if>
+                <if test='query.sortType == "4"'>
+                    zp.available_stock DESC
+                </if>
+                <if test='query.sortType == "5"'>
+                    zp.lock_stock DESC
+                </if>
+                <if test='query.sortType == "6"'>
+                    zp.lock_stock DESC
+                </if>
+                <if test='query.sortType == "7"'>
+                    zp.excess_stock DESC
+                </if>
+                <if test='query.sortType == "8"'>
+                    zp.excess_stock DESC
+                </if>
+            </when>
+            <otherwise>
+                zp.sort DESC
+            </otherwise>
+        </choose>
+    </select>
+    <select id="countFreightNum" resultType="java.lang.Integer">
+        SELECT count(pid) FROM zc_product zp
+        WHERE zp.is_deleted = 0 AND (zp.retail_freight_id = #{fid} OR zp.agent_freight_id = #{fid} OR
+        zp.cloud_freight_id = #{fid})
+    </select>
+    <select id="queryDetails" resultType="java.util.Map">
+        SELECT
+        zp.pid,
+        zp.price,
+        zp.market_price,
+        zp.stock_price,
+        zp.sid,
+        zp.weight,
+        zp.cover,
+        zp.product_name,
+        zp.total_stock,
+        zp.content,
+        zs.store_name,
+        zs.store_cover
+        FROM
+        zc_product zp
+        Left JOIN zc_store zs
+        ON zp.sid = zs.sid AND zs.is_deleted = 0
+        WHERE zp.is_deleted = 0 AND zp.pid = #{pid}
+    </select>
+    <select id="countStoreProductNum" resultType="java.lang.Integer">
+        SELECT COUNT(pid) FROM zc_product
+        WHERE sid = #{sid}
+    </select>
+
+    <select id="queryType" resultType="java.lang.String">
+        SELECT
+        GROUP_CONCAT(DISTINCT zpt.tid)
+        FROM
+        zc_product zp
+        LEFT JOIN zc_pt zcpt
+        ON zcpt.product_id = zp.pid
+        LEFT JOIN zc_product_type zpt
+        ON zcpt.type_id = zpt.tid
+        WHERE
+        sid = #{sid}
+    </select>
+    <select id="queryList" resultType="com.zhancheng.core.entity.Product">
+        SELECT
+        zp.*
+        FROM
+        zc_product zp
+        LEFT JOIN zc_pt zcpt
+        ON zcpt.product_id = zp.pid
+        LEFT JOIN zc_product_type zpt
+        ON zcpt.type_id = zpt.tid
+        <where>
+            zp.is_deleted = 0
+            <if test="query.typeId != null">
+                AND zcpt.type_id = #{query.typeId}
+            </if>
+            <if test="query.productType != null">
+                AND zp.product_type = #{query.productType}
+            </if>
+        </where>
+    </select>
+</mapper>

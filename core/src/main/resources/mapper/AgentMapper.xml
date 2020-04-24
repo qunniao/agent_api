@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zhancheng.core.dao.AgentMapper">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.zhancheng.core.entity.Agent" id="agentMap">
+        <result property="id" column="id"/>
+        <result property="trueName" column="true_name"/>
+        <result property="phone" column="phone"/>
+        <result property="levelId" column="level_id"/>
+        <result property="nickname" column="nickname"/>
+        <result property="openid" column="openid"/>
+        <result property="cover" column="cover"/>
+        <result property="password" column="password"/>
+        <result property="inviter" column="inviter"/>
+        <result property="superior" column="superior"/>
+        <result property="idCard" column="id_card"/>
+        <result property="birthday" column="birthday"/>
+        <result property="education" column="education"/>
+        <result property="region" column="region"/>
+        <result property="gender" column="gender"/>
+        <result property="userId" column="user_id"/>
+        <result property="adminId" column="admin_id"/>
+        <result property="reviewed" column="reviewed"/>
+        <result property="status" column="status"/>
+        <result property="gmtCreate" column="gmt_create"/>
+        <result property="gmtModified" column="gmt_modified"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id,true_name,phone,level_id,nickname,openid,inviter,superior,id_card,birthday,education, region,gender,
+    status,gmt_create,gmt_modified,user_id,admin_id reviewed </sql>
+    <sql id="queryTeam">
+        SELECT
+        za.id agentId,
+        za.phone,
+        za.nickname,
+        za.cover,
+        zal.nick
+        FROM
+        zc_agent za
+        LEFT JOIN zc_agent_level zal ON zal.id = za.level_id
+        <where>
+            <if test="query.search != null">
+                AND (za.nickname LIKE CONCAT('%',#{query.search},'%')
+                OR za.phone LIKE CONCAT('%',#{query.search},'%')
+                OR za.true_name LIKE CONCAT('%',#{query.search},'%'))
+            </if>
+            <choose>
+                <when test="query.relation != null">
+                    AND za.inviter = #{query.agentId}
+                </when>
+                <otherwise>
+                    AND za.superior = #{query.agentId}
+                </otherwise>
+            </choose>
+        </where>
+    </sql>
+
+    <select id="queryInfo" resultType="com.zhancheng.core.entity.Agent">
+        SELECT za.true_name,
+               za.phone,
+               za.level_id,
+               za.cover,
+               zal.nick levelName
+        FROM `zc_agent` za
+                 LEFT JOIN zc_agent_level zal ON zal.id = za.level_id
+        WHERE za.id = #{id}
+    </select>
+    <select id="queryAgentLevel" resultType="java.lang.String">
+        SELECT zal.nick
+        FROM zc_agent za
+                 LEFT JOIN zc_agent_level zal ON za.level_id = zal.id
+        WHERE za.id = #{agentId}
+    </select>
+
+    <select id="queryPage" resultType="com.zhancheng.core.vo.AgentListVo">
+        SELECT
+        za.id,
+        za.nickname,
+        za.phone,
+        za.gmt_create,
+        za.reviewed,
+        zal.nick levelNick,
+        zal.level agentLevel,
+        inviter.nickname inviterNick,
+        inviter.phone inviterPhone,
+        superior.nickname superiorNick,
+        superior.phone superiorPhone,
+        zap.amount,
+        zaw.income_balance
+        FROM
+        zc_agent za
+        LEFT JOIN zc_agent_level zal
+        ON za.level_id = zal.id
+        LEFT JOIN zc_agent inviter
+        ON za.inviter = inviter.id
+        LEFT JOIN zc_agent superior
+        ON za.superior = superior.id
+        LEFT JOIN zc_agent_performance zap
+        ON za.id = zap.agent_id
+        LEFT JOIN zc_agent_wallet zaw
+        ON za.id = zaw.agent_id
+        <where>
+            <if test="query.search != null and query.search != ''">
+                AND (za.nickname LIKE CONCAT('%',#{query.search},'%')
+                OR za.phone LIKE CONCAT('%',#{query.search},'%')
+                OR za.true_name LIKE CONCAT('%',#{query.search},'%'))
+            </if>
+        </where>
+        ORDER BY za.gmt_create DESC
+    </select>
+    <select id="queryTeamPage" resultType="com.zhancheng.core.vo.AgentTeamListVo">
+        <include refid="queryTeam"/>
+    </select>
+    <select id="queryTeamList" resultType="com.zhancheng.core.vo.AgentTeamListVo">
+        <include refid="queryTeam"/>
+    </select>
+
+    <select id="queryInfoList" resultType="com.zhancheng.core.vo.AgentInfoVo">
+        SELECT
+        za.id,
+        za.true_name,
+        za.nickname,
+        za.phone,
+        za.level_id,
+        za.cover,
+        za.region,
+        za.reviewed,
+        za.gmt_create,
+        zal.nick levelNick,
+        zal.level agentLevel,
+        inviter.nickname inviterNick,
+        inviter.phone inviterPhone,
+        superior.nickname superiorNick,
+        superior.phone superiorPhone,
+        st.store_name store_name,
+        st.store_cover store_cover,
+        ad.nickname adminNick,
+        ad.true_name adminName,
+        ad.phone adminPhone,
+        zaw.income_balance,
+        (select sum(case when ord.gmt_create >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) then ord.pay_money else 0 end) from zc_order_info ord where za.id = ord.agent_id AND ord.order_type=1 AND ord.order_state>2 AND ord.is_deleted=0) as monthPrice,
+        (select sum(ord.pay_money) from zc_order_info ord where za.id = ord.agent_id AND ord.order_type=1 AND ord.order_state>2 AND ord.is_deleted=0) as totalPrice
+        FROM
+        zc_agent za
+        LEFT JOIN zc_agent_level zal
+        ON za.level_id = zal.id
+        LEFT JOIN zc_agent inviter
+        ON za.inviter = inviter.id
+        LEFT JOIN zc_agent superior
+        ON za.superior = superior.id
+        LEFT JOIN zc_store st
+        ON za.id = st.agent_id
+        LEFT JOIN zc_admin ad
+        ON za.admin_id = ad.uid
+        LEFT JOIN zc_agent_wallet zaw
+        ON za.id = zaw.agent_id
+        <where>
+            <if test="query.levelId != null">
+                AND za.level_id = #{query.levelId}
+            </if>
+            <if test="query.search != null and query.search != ''">
+                AND (za.nickname LIKE CONCAT('%',#{query.search},'%')
+                OR za.phone LIKE CONCAT('%',#{query.search},'%')
+                OR za.true_name LIKE CONCAT('%',#{query.search},'%'))
+            </if>
+        </where>
+        ORDER BY za.gmt_create DESC
+    </select>
+
+    <select id="querySuperior" resultType="com.zhancheng.core.vo.AgentTeamListVo">
+        SELECT
+        superior_agent.id,
+        superior_agent.phone,
+        superior_agent.nickname,
+        superior_agent.cover,
+        zal.nick
+        FROM
+        zc_agent za
+        LEFT JOIN zc_agent superior_agent
+        <choose>
+            <when test="query.relation != null">
+                ON za.inviter = superior_agent.id
+            </when>
+            <otherwise>
+                ON za.superior = superior_agent.id
+            </otherwise>
+        </choose>
+        LEFT JOIN zc_agent_level zal
+        ON superior_agent.level_id = zal.id
+        WHERE za.id = #{query.agentId}
+    </select>
+
+    <select id="queryById" resultType="com.zhancheng.core.entity.Agent">
+        SELECT
+        za.*,
+        inviter.phone inviterPhone,
+        zaw.income_balance
+        FROM `zc_agent` za
+        LEFT JOIN zc_agent inviter ON za.inviter = inviter.id
+        LEFT JOIN zc_agent_wallet zaw
+        ON za.id = zaw.agent_id
+        WHERE za.id = #{id}
+    </select>
+
+</mapper>

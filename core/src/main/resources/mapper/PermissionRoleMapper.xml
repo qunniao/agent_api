@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zhancheng.core.dao.PermissionRoleMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.zhancheng.core.entity.PermissionRole" id="permissionRoleMap">
+        <result property="id" column="id"/>
+        <result property="rid" column="rid"/>
+        <result property="pid" column="pid"/>
+        <association property="permission" column="pid" select="com.zhancheng.core.dao.PermissionMapper.queryInfo"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+    id,rid,pid  </sql>
+
+    <select id="queryList" resultMap="permissionRoleMap">
+        SELECT
+            *
+        FROM
+            zc_permission_role zpr
+        <where>
+            <if test="rid != null">
+                AND zpr.rid = #{rid}
+            </if>
+        </where>
+    </select>
+</mapper>

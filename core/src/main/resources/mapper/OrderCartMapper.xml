@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zhancheng.core.dao.OrderCartMapper">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.zhancheng.core.entity.OrderCart" id="orderCartMap">
+        <result property="cid" column="cid"/>
+        <result property="sid" column="sid"/>
+        <result property="uid" column="uid"/>
+        <result property="skuId" column="sku_id"/>
+        <result property="spuId" column="spu_id"/>
+        <result property="productName" column="product_name"/>
+        <result property="productNum" column="product_num"/>
+        <result property="productPrice" column="product_price"/>
+        <result property="isDeleted" column="is_deleted"/>
+        <result property="gmtCreate" column="gmt_create"/>
+        <result property="gmtModified" column="gmt_modified"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        cid,sid,uid,sku_id,spu_id,product_name,product_num,product_price,is_deleted,gmt_create,gmt_modified   </sql>
+    <select id="queryPage" resultType="com.zhancheng.core.vo.OrderCartListVo">
+        SELECT zoc.cid,
+               zoc.sku_id,
+               zoc.spu_id pid,
+               zoc.product_num,
+               zoc.product_name,
+               zoc.product_price,
+               IFNULL(zpgs.pic, zp.cover) cover,
+               zpgs.sp1,
+               zpgs.sp2
+        FROM zc_order_cart zoc
+                 LEFT JOIN zc_product zp ON zoc.spu_id = zp.pid
+                 LEFT JOIN zc_product_guige_sku zpgs ON zoc.sku_id = zpgs.sku_id
+        WHERE zoc.uid = #{uid}
+          AND zoc.is_deleted = 0
+        ORDER BY zoc.gmt_modified DESC
+    </select>
+
+    <select id="queryInfo" resultType="com.zhancheng.core.vo.OrderCartListVo">
+        SELECT
+        zoc.cid,
+        zoc.sku_id,
+        zoc.spu_id pid,
+        zoc.product_num,
+        zoc.product_name,
+        zoc.product_price,
+        IFNULL(zpgs.pic,zp.cover) cover,
+        zpgs.sp1,
+        zpgs.sp2
+        FROM
+        zc_order_cart zoc
+        LEFT JOIN zc_product zp ON zoc.spu_id = zp.pid
+        LEFT JOIN zc_product_guige_sku zpgs ON zoc.sku_id = zpgs.sku_id
+        WHERE
+        zoc.is_deleted = 0 AND zoc.cid IN
+        <foreach collection="cIds" item="cid" index="index" open="(" close=")" separator=",">
+            #{cid}
+        </foreach>
+        ORDER BY zoc.gmt_modified DESC
+    </select>
+
+</mapper>

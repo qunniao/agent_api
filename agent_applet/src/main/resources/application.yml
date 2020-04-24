@@ -1,0 +1,10 @@
+server:
+  port: 8768
+spring:
+  profiles:
+    active: core
+  # 数据库连接池
+
+# 日志配置
+logging:
+  config: classpath:logback-spring.xml

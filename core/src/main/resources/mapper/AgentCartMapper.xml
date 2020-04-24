@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zhancheng.core.dao.AgentCartMapper">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.zhancheng.core.entity.AgentCart" id="agentCartMap">
+        <result property="cid" column="cid"/>
+        <result property="agentId" column="agent_id"/>
+        <result property="pid" column="pid"/>
+        <result property="skuId" column="sku_id"/>
+        <result property="productName" column="product_name"/>
+        <result property="productNum" column="product_num"/>
+        <result property="productPrice" column="product_price"/>
+        <result property="gmtCreate" column="gmt_create"/>
+        <result property="gmtModified" column="gmt_modified"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+            cid,
+            agent_id,
+            pid,
+            sku_id,
+            product_name,
+            product_num,
+            product_price,
+            gmt_create,
+            gmt_modified
+    </sql>
+
+    <select id="queryList" resultType="com.zhancheng.core.vo.OrderCartListVo">
+        SELECT zac.cid,
+        zac.pid,
+        zac.sku_id,
+        zac.product_num,
+        zac.product_name,
+        zac.product_price,
+        zp.weight,
+        IFNULL(zpgs.pic, zp.cover) cover,
+        zpgs.sp1,
+        zpgs.sp2
+        FROM zc_agent_cart zac
+        LEFT JOIN zc_product zp
+        ON zp.pid = zac.pid
+        LEFT JOIN zc_product_guige_sku zpgs
+        ON zpgs.sku_id = zac.sku_id
+        WHERE zac.agent_id = #{agentId}
+        ORDER BY zac.gmt_modified DESC
+    </select>
+    <select id="queryInfo" resultType="com.zhancheng.core.vo.OrderCartListVo">
+        SELECT
+        zac.cid,
+        zac.pid,
+        zac.sku_id,
+        zac.product_num,
+        zac.product_name,
+        zac.product_price,
+        zp.weight,
+        IFNULL( zpgs.pic, zp.cover ) cover,
+        zpgs.sp1,
+        zpgs.sp2
+        FROM
+        zc_agent_cart zac
+        LEFT JOIN zc_product zp ON zac.pid = zp.pid
+        LEFT JOIN zc_product_guige_sku zpgs ON zac.sku_id = zpgs.sku_id
+        WHERE
+        zac.cid IN
+        <foreach collection="cIds" item="cid" index="index" open="(" close=")" separator=",">
+            #{cid}
+        </foreach>
+        ORDER BY zac.gmt_modified DESC
+    </select>
+
+</mapper>
